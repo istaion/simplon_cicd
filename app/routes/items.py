@@ -29,7 +29,7 @@ def get_item(item_id,  db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
-def create_item(item_data,  db):
+def create_item(item_data: ItemCreate, db: Session = Depends(get_db)):
     return ItemService.create(db, item_data)
 
 
