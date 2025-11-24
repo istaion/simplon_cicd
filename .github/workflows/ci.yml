@@ -25,21 +25,21 @@ jobs:
 
   lint:
     needs: [setup_uv]
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v6
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
 
-          - name: Add uv to PATH
-            run: echo "${{ needs.setup_uv.outputs.uv-path }}" >> $GITHUB_PATH
+      - name: Add uv to PATH
+        run: echo "${{ needs.setup_uv.outputs.uv-path }}" >> $GITHUB_PATH
 
-          - name: Sync dependencies (uv sync)
-            run: uv sync
+      - name: Sync dependencies (uv sync)
+        run: uv sync
 
-          - name: Run Ruff Check
-            run: uv run ruff check .
+      - name: Run Ruff Check
+        run: uv run ruff check .
 
-          - name: Check Formatting with Ruff
-            run: uv run ruff format --check .
+      - name: Check Formatting with Ruff
+        run: uv run ruff format --check .
 
   typecheck:
     needs: [setup_uv]
