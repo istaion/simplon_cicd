@@ -1,5 +1,6 @@
+
 from sqlmodel import Field, SQLModel
-from typing import Optional
+
 
 class ItemBase(SQLModel):
     nom: str = Field(min_length=1, max_length=255)
