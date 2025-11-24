@@ -12,9 +12,9 @@ jobs:
       uv-path: ${{ steps.uv-path.outputs.path }}
     steps:
       - uses: astral-sh/setup-uv@v7.1.4
-          with:
-            enable-cache: true
-            cache-dependency-glob: "uv.lock"
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
   lint:
     needs: [setup_uv]
