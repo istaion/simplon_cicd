@@ -9,5 +9,3 @@ class Item(SQLModel, table=True):
     nom: str = Field(index=True)
     prix: float
 
-    def _legacy_method(self):
-        pass
