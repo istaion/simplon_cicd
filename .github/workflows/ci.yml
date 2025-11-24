@@ -15,7 +15,6 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-
   lint:
     needs: [setup_uv]
         runs-on: ubuntu-latest
