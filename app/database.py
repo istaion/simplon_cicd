@@ -10,7 +10,7 @@ from sqlmodel import Session, create_engine
 from typing import Generator
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/items_db"
+    "DATABASE_URL", None
 )
 
 POOL_SIZE = 10
