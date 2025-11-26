@@ -1082,15 +1082,6 @@ wheels = [
 ]
 
 [[package]]
-name = "semantic-release"
-version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4c/2a/17b0cd7ce4ff495c31519f8efa0f8c3eaccfbaa2426ddf3ddf2944859c76/semantic-release-0.1.0.tar.gz", hash = "sha256:943c4d2f5bf2f42958c1868f3c5ccabfcade6017d9d7562192d24053fb2c8efa", size = 1554, upload-time = "2020-04-26T17:39:45.641Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/44/c2ed0a3a588fd3efa9cf5a7a544a90ae29546b3043752c38c11b0ee58a10/semantic_release-0.1.0-py3-none-any.whl", hash = "sha256:ac7bbd0aaf3bad04d812fae2979386388c9c9a1af489ed97f3fdbaa24eef2a2b", size = 1950, upload-time = "2020-04-26T17:39:47.614Z" },
-]
-
-[[package]]
 name = "sentry-sdk"
 version = "2.45.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1199,7 +1190,6 @@ dependencies = [
     { name = "pytest-cov" },
     { name = "python-semantic-release" },
     { name = "ruff" },
-    { name = "semantic-release" },
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
 ]
@@ -1220,7 +1210,6 @@ requires-dist = [
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "python-semantic-release", specifier = ">=10.5.2" },
     { name = "ruff", specifier = ">=0.14.6" },
-    { name = "semantic-release", specifier = ">=0.1.0" },
     { name = "sqlalchemy", specifier = ">=2.0.44" },
     { name = "sqlmodel", specifier = ">=0.0.27" },
 ]
