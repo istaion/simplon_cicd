@@ -1,9 +1,15 @@
-name: CI/CD
+name: CI/CD Pipeline
+
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   pre-commit-checks:
     runs-on: ubuntu-latest
@@ -20,6 +26,7 @@ jobs:
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +39,7 @@ jobs:
         run: uv run ruff check .
       - name: Check Formatting with Ruff
         run: uv run ruff format --check .
+
   typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -42,6 +50,7 @@ jobs:
         run: uv sync
       - name: Run Mypy
         run: uv run mypy app/
+
   tests:
     runs-on: ubuntu-latest
     services:
@@ -78,104 +87,102 @@ jobs:
           name: coverage-report
           path: htmlcov/
 
+  # Nouveau job de release avec semantic versioning
   release:
+    name: Semantic Release
     runs-on: ubuntu-latest
     needs: [pre-commit-checks, lint, typecheck, tests]
+    # Uniquement sur push (pas sur PR) et uniquement sur main/develop
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    concurrency: release
+    concurrency: release-${{ github.ref }}
     permissions:
       id-token: write
       contents: write
       packages: write
-    
     outputs:
+      version: ${{ steps.get_version.outputs.version }}
       released: ${{ steps.check_release.outputs.released }}
-      version: ${{ steps.check_release.outputs.version }}
-      tag: ${{ steps.check_release.outputs.tag }}
-    
     steps:
-      - uses: actions/checkout@v6
+      - name: Generate App Token
+        id: get_token
+        uses: actions/create-github-app-token@v2
         with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.get_token.outputs.token }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Setup Git
+
+      - name: Checkout branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Checking out branch: $BRANCH_NAME"
+          git checkout "$BRANCH_NAME"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
-      
-      - name: Sync dependencies
-        run: uv sync
-      
-      - name: Get current version
-        id: current_version
-        run: |
-          CURRENT=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
-          echo "current=$CURRENT" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT"
-      
-      - name: Python Semantic Release Version
+        with:
+          version: "latest"
+
+      - name: Install Python Semantic Release
+        run: uv tool install python-semantic-release
+
+      - name: Semantic Versioning
+        id: semantic
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
         run: |
-          # Version avec --no-push --no-commit pour ne pas pusher automatiquement
-          uv run semantic-release --strict version --no-push --no-commit || true
-      
-      - name: Check if version changed
+          git config user.name "berryWIP-bot[bot]"
+          git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
+          
+          uv run semantic-release version --changelog
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "📦 Creating GitHub Release (main branch)"
+            uv run semantic-release publish
+          else
+            echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
+            git push --follow-tags origin HEAD
+          fi
+
+      - name: Check if release was created
         id: check_release
         run: |
-          NEW_VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
-          OLD_VERSION="${{ steps.current_version.outputs.current }}"
-          
-          echo "Old version: $OLD_VERSION"
-          echo "New version: $NEW_VERSION"
-          
-          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+          if git describe --exact-match --tags HEAD 2>/dev/null; then
             echo "released=true" >> $GITHUB_OUTPUT
-            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "✅ New version detected: $NEW_VERSION"
           else
             echo "released=false" >> $GITHUB_OUTPUT
-            echo "❌ No version change detected"
           fi
-      
-      - name: Commit and tag version
-        if: steps.check_release.outputs.released == 'true'
-        run: |
-          git add pyproject.toml app/__init__.py CHANGELOG.md
-          git commit -m "chore(release): ${{ steps.check_release.outputs.version }} [skip ci]" || echo "Nothing to commit"
-          
-          # Supprimer le tag local s'il existe
-          git tag -d ${{ steps.check_release.outputs.tag }} 2>/dev/null || true
-          
-          # Créer le nouveau tag
-          git tag ${{ steps.check_release.outputs.tag }}
-          echo "Tagged version: ${{ steps.check_release.outputs.tag }}"
 
-      - name: Push tags only
-        if: steps.check_release.outputs.released == 'true'
+      - name: Get Version
+        id: get_version
         run: |
-          # Force push le tag (écrase le tag distant s'il existe)
-          git push --tags --force
-          echo "✅ Tags pushed successfully"
-      
-      - name: Create GitHub Release
-        if: steps.check_release.outputs.released == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          uv run semantic-release publish --tag ${{ steps.check_release.outputs.tag }}
-      
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  # Build et push Docker uniquement si une release a été créée
+  build-and-push-docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.ref == 'refs/heads/main' && needs.release.outputs.released == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Set up Docker Buildx
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -183,19 +190,39 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
-        if: steps.check_release.outputs.released == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.check_release.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.check_release.outputs.version }}
-            type=semver,pattern={{major}},value=${{ steps.check_release.outputs.version }},enable=${{ !contains(steps.check_release.outputs.version, '-') }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' && !contains(steps.check_release.outputs.version, '-') }}
+            type=raw,value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.version=${{ needs.release.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
-      - name: Build and push Docker image
-        if: steps.check_release.outputs.released == 'true'
+      - name: Build Docker image (without pushing)
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.version }}
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+
+      - name: Push Docker image (if scan passed)
         uses: docker/build-push-action@v5
         with:
           context: .
