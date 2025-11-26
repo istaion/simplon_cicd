@@ -6,10 +6,13 @@ et fournit une fonction générateur pour obtenir des sessions de base de donné
 
 import os
 from collections.abc import Generator
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = os.getenv("DATABASE_URL", None)
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 POOL_SIZE = 10
 
