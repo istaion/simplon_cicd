@@ -325,4 +325,12 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.lab
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "🐳 Image Docker publiée" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tags: ${{ needs.release.outputs.version }}, latest" >> $GITHUB_STEP_SUMMARY
