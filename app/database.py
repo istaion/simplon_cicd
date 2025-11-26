@@ -5,18 +5,20 @@ et fournit une fonction générateur pour obtenir des sessions de base de donné
 """
 
 import os
+from collections.abc import Generator
 
+from dotenv import load_dotenv
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/items_db"
-)
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 POOL_SIZE = 10
 
 engine = create_engine(DATABASE_URL)
 
 
-def get_db():
+def get_db() -> Generator[Session]:
     with Session(engine) as session:
         yield session

@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,7 +12,7 @@ UNUSED_VAR = "cette variable n'est jamais utilisée"
 
 
 @asynccontextmanager
-async def lifespan(fastapi_app: FastAPI):
+async def lifespan(fastapi_app: FastAPI) -> AsyncGenerator[None]:
     SQLModel.metadata.create_all(engine)
     yield
 
@@ -27,14 +28,10 @@ app.include_router(items_router)
 
 
 @app.get("/")
-def root():
+def root() -> dict:
     return {"message": "Items CRUD API"}
 
 
 @app.get("/health")
-def health():
+def health() -> dict:
     return {"status": "healthy"}
-
-
-secret = "fezffzefzefzlfzhfzfzfjzfzfzfdzgerg54g651fzefg51zeg5g"
-API_KEY = "sk-1234567890abcdef"
