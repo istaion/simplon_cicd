@@ -16,6 +16,7 @@ dependencies = [
     "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.6",
+    "semantic-release>=0.1.0",
     "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
 ]
@@ -63,3 +64,22 @@ pythonpath = ["."]
 python_files = "test_*.py"
 python_functions = "test_*"
 addopts = "--strict-markers --cov=app --cov-report=term-missing"
+
+[tool.semantic_release]
+
+
+[tool.semantic_release.branches.main]
+
+
+[tool.semantic_release.branches.develop]
+
+
+[tool.semantic_release.changelog]
+
+
+[tool.semantic_release.commit_parser_options]
+
+
+[tool.semantic_release.remote]
+
+[tool.semantic_release.publish]

@@ -26,7 +26,6 @@ repos:
     hooks:
       # Hooks utiles supplémentaires
       - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
