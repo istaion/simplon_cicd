@@ -1,7 +1,7 @@
 **Formatage** :
     - Ligne trop longue (main.py)
 
-**Sécurité** : 
+**Sécurité** :
     - Pas de sécurisation des endpoints
     - des api_key et des secrests éxposés... (main.py)
     - valeur par défaut non sécurisé dans les getenv

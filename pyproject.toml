@@ -11,10 +11,12 @@ dependencies = [
     "fastapi[standard]>=0.121.0",
     "httpx>=0.28.1",
     "mypy>=1.18.2",
+    "pre-commit>=4.4.0",
     "psycopg2-binary>=2.9.11",
     "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.6",
+    "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
 ]
 
