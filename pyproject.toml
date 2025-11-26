@@ -70,6 +70,9 @@ version_toml = ["pyproject.toml:project.version"]
 branch = "main"
 upload_to_repository = false
 upload_to_release = true
+build_command = false
+# Éviter le push automatique
+push = false
 
 [tool.semantic_release.branches.main]
 match = "main"
@@ -79,3 +82,8 @@ prerelease = false
 match = "develop"
 prerelease = true
 prerelease_token = "rc"
+
+[tool.semantic_release.remote]
+name = "origin"
+type = "github"
+ignore_token_for_push = false
