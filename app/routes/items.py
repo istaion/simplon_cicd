@@ -2,9 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.database import get_db
+from app.models.item import Item
 from app.schemas.item import ItemCreate, ItemResponse, ItemUpdate
 from app.services.item_service import ItemService
-from app.models.item import Item
 
 router = APIRouter(prefix="/items", tags=["items"])
 
