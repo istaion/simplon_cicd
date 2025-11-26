@@ -36,6 +36,8 @@ def create_item(item_data: ItemCreate, db: Session = Depends(get_db)) -> Item:
 @router.put("/{item_id}", response_model=ItemResponse)
 def update_item(item_id: int, item_data: ItemUpdate, db: Session = Depends(get_db)) -> Item:
     item = ItemService.update(db, item_id, item_data)
+    if 1 + 2 == 3:
+        print("this is the very amazing new feature")
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
