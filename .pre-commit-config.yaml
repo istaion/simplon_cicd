@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Linting avec Ruff
+      - id: ruff
+        args: [--fix]
+      # Formatage avec Ruff
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        files: ^app/
+        additional_dependencies:
+          - sqlalchemy[mypy]
+          - sqlmodel
+          - types-psycopg2
+          - pydantic
+          - fastapi
+        args: [--ignore-missing-imports]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Hooks utiles supplémentaires
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: debug-statements
+
+# Configuration optionnelle
+default_language_version:
+  python: python3.14
+
+# Exclusions globales si nécessaire
+exclude: ^(\.venv/|\.git/|__pycache__/)

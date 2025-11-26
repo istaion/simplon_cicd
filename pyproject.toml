@@ -1,6 +1,6 @@
 [project]
 name = "training-ci-cd-semantic-release"
-version = "0.1.0"
+version = "0.1.1"
 description = "CRUD API with PostgreSQL for managing items"
 requires-python = ">=3.13"
 
@@ -9,7 +9,15 @@ requires-python = ">=3.13"
 # ============================================================================
 dependencies = [
     "fastapi[standard]>=0.121.0",
+    "httpx>=0.28.1",
+    "mypy>=1.18.2",
+    "pre-commit>=4.4.0",
     "psycopg2-binary>=2.9.11",
+    "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
+    "python-semantic-release>=10.5.2",
+    "ruff>=0.14.6",
+    "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
 ]
 
@@ -17,3 +25,57 @@ dependencies = [
 dev = [
     "diagrams>=0.24.4",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+# Ignorer B008 uniquement dans les routes FastAPI
+"app/routes/*.py" = ["B008"]
+"app/main.py" = ["B008"]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "--strict-markers --cov=app --cov-report=term-missing"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+upload_to_repository = false
+upload_to_release = true
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.branches.develop]
+match = "develop"
+prerelease = true
+prerelease_token = "rc"

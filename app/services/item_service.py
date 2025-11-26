@@ -5,6 +5,7 @@ opérations CRUD (Create, Read, Update, Delete) sur les articles.
 """
 
 from sqlmodel import Session, select
+
 from app.models.item import Item
 from app.schemas.item import ItemCreate, ItemUpdate
 
@@ -16,6 +17,7 @@ class ItemService:
     toutes les opérations CRUD sur les articles, en séparant
     la logique métier des routes API.
     """
+
     @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 100) -> list[Item]:
         """Récupère une liste paginée d'articles.
