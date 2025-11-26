@@ -17,7 +17,6 @@ dependencies = [
     "pytest-cov>=7.0.0",
     "python-semantic-release>=10.5.2",
     "ruff>=0.14.6",
-    "semantic-release>=0.1.0",
     "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
 ]
