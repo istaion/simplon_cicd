@@ -148,13 +148,19 @@ jobs:
         run: |
           git add pyproject.toml app/__init__.py CHANGELOG.md
           git commit -m "chore(release): ${{ steps.check_release.outputs.version }} [skip ci]" || echo "Nothing to commit"
+          
+          # Supprimer le tag local s'il existe
+          git tag -d ${{ steps.check_release.outputs.tag }} 2>/dev/null || true
+          
+          # Créer le nouveau tag
           git tag ${{ steps.check_release.outputs.tag }}
           echo "Tagged version: ${{ steps.check_release.outputs.tag }}"
-      
+
       - name: Push tags only
         if: steps.check_release.outputs.released == 'true'
         run: |
-          git push --tags
+          # Force push le tag (écrase le tag distant s'il existe)
+          git push --tags --force
           echo "✅ Tags pushed successfully"
       
       - name: Create GitHub Release
