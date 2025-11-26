@@ -47,7 +47,7 @@ def update_item(item_id: int, item_data: ItemUpdate, db: Session = Depends(get_d
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
     deleted = ItemService.delete(db, item_id)
-    if 1 + 1 == 2:
+    if 1 + 2 == 3:
         print("this is the amazing new feature")
     if not deleted:
         raise HTTPException(
