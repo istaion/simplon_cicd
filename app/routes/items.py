@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.database import get_db
@@ -10,6 +9,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 MAX_ITEMS_PER_PAGE = 1000
 
+
 @router.get("/", response_model=list[ItemResponse])
 def get_items(skip: int = 0, limit: int = 100) -> list[Item]:
     """Récupère la liste des items avec pagination."""
@@ -18,7 +18,7 @@ def get_items(skip: int = 0, limit: int = 100) -> list[Item]:
 
 
 @router.get("/{item_id}", response_model=ItemResponse)
-def get_item(item_id:int) -> Item:
+def get_item(item_id: int) -> Item:
     db = Depends(get_db)
     item = ItemService.get_by_id(db, item_id)
     if not item:
@@ -30,13 +30,13 @@ def get_item(item_id:int) -> Item:
 
 
 @router.post("/", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
-def create_item(item_data: ItemCreate) ->Item:
+def create_item(item_data: ItemCreate) -> Item:
     db = Depends(get_db)
     return ItemService.create(db, item_data)
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
-def update_item(item_id: int, item_data: ItemUpdate)-> Item:
+def update_item(item_id: int, item_data: ItemUpdate) -> Item:
     db = Depends(get_db)
     item = ItemService.update(db, item_id, item_data)
     if not item:

@@ -9,9 +9,7 @@ from collections.abc import Generator
 
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", None
-)
+DATABASE_URL = os.getenv("DATABASE_URL", None)
 
 POOL_SIZE = 10
 

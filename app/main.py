@@ -35,4 +35,3 @@ def root() -> dict:
 @app.get("/health")
 def health() -> dict:
     return {"status": "healthy"}
-
