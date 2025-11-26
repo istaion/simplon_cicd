@@ -25,7 +25,6 @@ repos:
     rev: v5.0.0
     hooks:
       # Hooks utiles supplémentaires
-      - id: trailing-whitespace
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
