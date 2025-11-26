@@ -87,13 +87,115 @@ jobs:
           name: coverage-report
           path: htmlcov/
 
-  # Nouveau job de release avec semantic versioning
+  # Auto-PR de develop vers main
+  auto-pr-to-main:
+    name: Auto PR to Main
+    runs-on: ubuntu-latest
+    needs: [pre-commit-checks, lint, typecheck, tests]
+    # Uniquement sur push vers develop (pas sur PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Generate App Token
+        id: get_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.get_token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          PR_EXISTS=$(gh pr list --base main --head develop --json number --jq 'length')
+          echo "exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+          
+          if [ "$PR_EXISTS" -gt 0 ]; then
+            PR_NUMBER=$(gh pr list --base main --head develop --json number --jq '.[0].number')
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "✅ Une PR develop → main existe déjà (#$PR_NUMBER)"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_pr.outputs.exists == '0'
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          PR_URL=$(gh pr create \
+            --base main \
+            --head develop \
+            --title "🚀 Release: Merge develop into main" \
+            --body "## 📦 Release automatique
+
+          Cette PR a été créée automatiquement suite à un push sur \`develop\`.
+
+          ### Changements inclus
+
+          Tous les commits de \`develop\` qui ne sont pas encore dans \`main\`.
+
+          ### Actions après merge
+
+          - ✅ Une nouvelle version sera créée automatiquement (semantic-release)
+          - ✅ Une image Docker sera buildée et pushée
+          - ✅ Une GitHub Release sera publiée
+
+          ---
+
+          **Commit:** ${{ github.sha }}
+          **Auteur:** @${{ github.actor }}")
+          
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          
+          # Extraire le numéro de PR de l'URL
+          PR_NUMBER=$(echo $PR_URL | grep -oP '\d+$')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "✅ PR créée: $PR_URL (#$PR_NUMBER)"
+
+      - name: Enable Auto-merge
+        if: steps.check_pr.outputs.exists == '0' || steps.check_pr.outputs.exists == '1'
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          # Récupère le numéro de la PR (soit celle qui vient d'être créée, soit celle existante)
+          if [ "${{ steps.check_pr.outputs.exists }}" == "0" ]; then
+            PR_NUMBER=${{ steps.create_pr.outputs.pr_number }}
+          else
+            PR_NUMBER=${{ steps.check_pr.outputs.pr_number }}
+          fi
+          
+          echo "🔄 Activation de l'auto-merge pour PR #$PR_NUMBER"
+          
+          # Active l'auto-merge (merge automatique quand les checks passent)
+          gh pr merge $PR_NUMBER --auto --merge --delete-branch=false || true
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.check_pr.outputs.exists }}" == "0" ]; then
+            echo "✅ Nouvelle PR créée: #${{ steps.create_pr.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "🔄 Auto-merge activé" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ PR existante: #${{ steps.check_pr.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "🔄 Auto-merge vérifié/activé" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Release avec semantic versioning (uniquement sur main)
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
     needs: [pre-commit-checks, lint, typecheck, tests]
-    # Uniquement sur push (pas sur PR) et uniquement sur main/develop
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    # Uniquement sur push vers main (pas sur PR ni develop)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     concurrency: release-${{ github.ref }}
     permissions:
       id-token: write
@@ -139,15 +241,9 @@ jobs:
           git config user.name "berryWIP-bot[bot]"
           git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
           
+          echo "📦 Creating version and GitHub Release"
           uv run semantic-release version --changelog
-          
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "📦 Creating GitHub Release (main branch)"
-            uv run semantic-release publish
-          else
-            echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
-            git push --follow-tags origin HEAD
-          fi
+          uv run semantic-release publish
 
       - name: Check if release was created
         id: check_release
@@ -163,6 +259,7 @@ jobs:
         run: |
           VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION" >> $GITHUB_STEP_SUMMARY
 
   # Build et push Docker uniquement si une release a été créée
   build-and-push-docker:
@@ -231,3 +328,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "🐳 Image Docker publiée" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tags: ${{ needs.release.outputs.version }}, latest" >> $GITHUB_STEP_SUMMARY
