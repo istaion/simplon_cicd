@@ -81,7 +81,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [pre-commit-checks, lint, typecheck, tests]
-    # Ne s'exécute que sur les pushs (pas sur les PRs)
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     concurrency: release
     permissions:
@@ -124,28 +123,30 @@ jobs:
           BRANCH="${{ steps.branch.outputs.branch }}"
           echo "Running semantic-release on branch: $BRANCH"
           
-          # Version
-          uv run semantic-release --strict version
+          # Version avec --no-push et --no-commit pour gérer manuellement
+          uv run semantic-release --strict version --no-push --no-commit
           
           # Check if a new version was created
-          if git describe --exact-match HEAD >/dev/null 2>&1; then
-            echo "released=true" >> $GITHUB_OUTPUT
-            VERSION=$(git describe --tags --abbrev=0)
-            echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
-            echo "tag=$VERSION" >> $GITHUB_OUTPUT
-            
-            # Publish
-            uv run semantic-release --strict publish
-          else
+          if git diff --quiet; then
             echo "released=false" >> $GITHUB_OUTPUT
             echo "No new version to release"
+          else
+            # Commit les changements de version
+            git add .
+            NEW_VERSION=$(grep "^version" pyproject.toml | head -1 | cut -d'"' -f2)
+            git commit -m "chore(release): ${NEW_VERSION} [skip ci]"
+            git tag "v${NEW_VERSION}"
+            
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+            
+            # Push uniquement les tags (pas la branche)
+            git push --tags
+            
+            # Créer la release GitHub
+            uv run semantic-release --strict publish
           fi
-      
-      - name: Push changes
-        if: steps.release.outputs.released == 'true'
-        run: |
-          git push origin ${{ steps.branch.outputs.branch }}
-          git push --tags
       
       - name: Set up Docker Buildx
         if: steps.release.outputs.released == 'true'
