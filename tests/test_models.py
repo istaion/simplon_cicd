@@ -180,11 +180,7 @@ class TestItemResponseSchema:
         item = Item(id=1, nom="Test Item", prix=99.99)
 
         # Simuler la conversion (FastAPI le fait automatiquement)
-        response_data = ItemResponse(
-            id=item.id,
-            nom=item.nom,
-            prix=item.prix
-        )
+        response_data = ItemResponse(id=item.id, nom=item.nom, prix=item.prix)
 
         assert response_data.id == item.id
         assert response_data.nom == item.nom

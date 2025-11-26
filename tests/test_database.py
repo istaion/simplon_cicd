@@ -69,7 +69,7 @@ class TestGetDbFunction:
         SQLModel.metadata.create_all(test_engine)
 
         # Patcher l'engine dans le module database
-        with patch('app.database.engine', test_engine):
+        with patch("app.database.engine", test_engine):
             db_generator = get_db()
             session = next(db_generator)
 
@@ -143,6 +143,7 @@ class TestDatabaseIntegration:
 
         # Vérifier que les tables existent
         from sqlalchemy import inspect
+
         inspector = inspect(test_engine)
         tables = inspector.get_table_names()
 

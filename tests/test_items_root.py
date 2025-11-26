@@ -48,7 +48,6 @@ class TestGetItemsRoute:
         assert len(data) == 3
         assert data[0]["nom"] == "Item 2"
 
-
     def test_get_items_response_model(self, client: TestClient, session: Session):
         """Test que la réponse correspond au modèle ItemResponse."""
         item = Item(nom="Test Item", prix=49.99)
@@ -104,10 +103,7 @@ class TestCreateItemRoute:
 
     def test_create_item_success(self, client: TestClient):
         """Test la création réussie d'un item."""
-        item_data = {
-            "nom": "Clavier Mécanique",
-            "prix": 149.99
-        }
+        item_data = {"nom": "Clavier Mécanique", "prix": 149.99}
 
         response = client.post("/items/", json=item_data)
 
@@ -119,10 +115,7 @@ class TestCreateItemRoute:
 
     def test_create_item_persists(self, client: TestClient, session: Session):
         """Test que l'item créé est bien persisté en base."""
-        item_data = {
-            "nom": "Casque Audio",
-            "prix": 79.99
-        }
+        item_data = {"nom": "Casque Audio", "prix": 79.99}
 
         response = client.post("/items/", json=item_data)
         created_id = response.json()["id"]
@@ -145,10 +138,7 @@ class TestCreateItemRoute:
 
     def test_create_item_validation_empty_nom(self, client: TestClient):
         """Test que le nom ne peut pas être vide."""
-        item_data = {
-            "nom": "",
-            "prix": 10.0
-        }
+        item_data = {"nom": "", "prix": 10.0}
 
         response = client.post("/items/", json=item_data)
 
@@ -156,10 +146,7 @@ class TestCreateItemRoute:
 
     def test_create_item_validation_negative_price(self, client: TestClient):
         """Test que le prix doit être positif."""
-        item_data = {
-            "nom": "Item Prix Négatif",
-            "prix": -10.0
-        }
+        item_data = {"nom": "Item Prix Négatif", "prix": -10.0}
 
         response = client.post("/items/", json=item_data)
 
@@ -167,10 +154,7 @@ class TestCreateItemRoute:
 
     def test_create_item_validation_zero_price(self, client: TestClient):
         """Test que le prix ne peut pas être zéro."""
-        item_data = {
-            "nom": "Item Prix Zéro",
-            "prix": 0.0
-        }
+        item_data = {"nom": "Item Prix Zéro", "prix": 0.0}
 
         response = client.post("/items/", json=item_data)
 
@@ -180,7 +164,7 @@ class TestCreateItemRoute:
         """Test que le nom ne peut pas dépasser 255 caractères."""
         item_data = {
             "nom": "a" * 256,  # 256 caractères
-            "prix": 10.0
+            "prix": 10.0,
         }
 
         response = client.post("/items/", json=item_data)
@@ -198,10 +182,7 @@ class TestUpdateItemRoute:
         session.commit()
         session.refresh(item)
 
-        update_data = {
-            "nom": "Modifié",
-            "prix": 75.0
-        }
+        update_data = {"nom": "Modifié", "prix": 75.0}
 
         response = client.put(f"/items/{item.id}", json=update_data)
 
@@ -217,9 +198,7 @@ class TestUpdateItemRoute:
         session.commit()
         session.refresh(item)
 
-        update_data = {
-            "prix": 99.99
-        }
+        update_data = {"prix": 99.99}
 
         response = client.put(f"/items/{item.id}", json=update_data)
 
@@ -230,10 +209,7 @@ class TestUpdateItemRoute:
 
     def test_update_item_not_found(self, client: TestClient):
         """Test que PUT /items/{id} retourne 404 si l'item n'existe pas."""
-        update_data = {
-            "nom": "Inexistant",
-            "prix": 100.0
-        }
+        update_data = {"nom": "Inexistant", "prix": 100.0}
 
         response = client.put("/items/9999", json=update_data)
 
