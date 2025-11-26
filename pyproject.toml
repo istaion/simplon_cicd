@@ -72,6 +72,8 @@ version_variables = ["app/__init__.py:__version__"]
 build_command = "uv build"
 major_on_zero = true
 tag_format = "v{version}"
+commit_message = "chore(release): {version}\n\n[skip ci]"
+commit_parser = "angular"
 
 [tool.semantic_release.branches.main]
 match = "main"
@@ -83,17 +85,11 @@ prerelease = true
 prerelease_token = "rc"
 
 [tool.semantic_release.changelog]
-template_dir = "templates"
 changelog_file = "CHANGELOG.md"
-exclude_commit_patterns = [
-  "^chore",
-  "^ci",
-  "^docs",
-  "^style",
-  "^test",
-  "^build",
-  "^refactor",
-]
+exclude_commit_patterns = []
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", "refactor", "test"]
