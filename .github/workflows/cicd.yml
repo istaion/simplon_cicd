@@ -79,7 +79,7 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: |
-          uv run pytest --cov=app --cov-report=term --cov-report=html
+          uv run pytest --cov=app --cov-report=term --cov-report=html --cov-fail-under=60
           uv run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage results
         uses: actions/upload-artifact@v4
@@ -238,8 +238,8 @@ jobs:
           GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
           GH_TOKEN: ${{ steps.get_token.outputs.token }}
         run: |
-          git config user.name "berryWIP-bot[bot]"
-          git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
+          git config user.name " the-hyper-secret-app"
+          git config user.email " the-hyper-secret-app@users.noreply.github.com"
           
           echo "📦 Creating version and GitHub Release"
           uv run semantic-release version --changelog
