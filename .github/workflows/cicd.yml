@@ -238,8 +238,8 @@ jobs:
           GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
           GH_TOKEN: ${{ steps.get_token.outputs.token }}
         run: |
-          git config user.name "la-belle-licorne"
-          git config user.email "la-belle-licorne@users.noreply.github.com"
+          git config user.name "the-hyper-secret-app"
+          git config user.email "the-hyper-secret-app@users.noreply.github.com"
           
           echo "📦 Creating version and GitHub Release"
           uv run semantic-release version --changelog
